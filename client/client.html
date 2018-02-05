@@ -6,7 +6,100 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
-
+    //function to handle our xhr response
+    const handleResponse = (xhr) => {
+	
+	  const type = xhr.getResponseHeader('content-type');
+      //grab the content section
+      const content = document.querySelector("#content");
+	  
+	  content.innerHTML = "";
+	  
+	  const h1 = document.createElement('h1');
+	  const p = document.createElement('p');
+	  
+	  h1.textContent = `Error code not implemented by client.`;
+	  
+	  if(type === 'application/json') {
+		//parse the response text into a JSON object
+        const obj = JSON.parse(xhr.response);
+		//add the json fields to our html elements
+        //h1.textContent = `Id: ${obj.id}`;
+        p.textContent = `Message: ${obj.message}`; 
+      } //if response was in xml
+      else if (type === 'text/xml') {
+		//grab the name tag and age tag from our responseXML
+		//This will only work if the responding XML is completely valid.
+		//Otherwise the responseXML field will be null
+        //const id = xhr.responseXML.querySelector('id').textContent;
+        const message = xhr.responseXML.querySelector('message').textContent;
+		
+		//add the xml fields to our html elements
+	    //h1.textContent = `Id: ${id}`;
+        p.textContent = `Message: ${message}`; 
+      }
+	  
+      //check the xhr status code and handle accordingly
+      switch(xhr.status) {
+        case 200: //success
+          h1.textContent =`Success`;
+          break;
+        case 400: //bad request 
+          h1.textContent = `Bad Request`;
+          break;
+		case 401: //bad request 
+          h1.textContent = `Not Authorized`;
+          break;
+	    case 403: //not found (requested resource does not exist)
+          h1.textContent = `Forbidden`;
+          break;
+        case 404: //not found (requested resource does not exist)
+          h1.textContent = `Resource Not Found`;
+          break;
+	    case 500: //internal error
+          h1.textContent = `Internal Error`;
+          break;
+		case 501: //not implemented
+          h1.textContent = `Not Implemented`;
+          break;
+        default: //default other errors we are not handling in this example
+          break;
+      }
+	  
+	  
+	  //append the h1 and p to the content.
+      content.appendChild(h1);
+      content.appendChild(p);
+    };
+    
+    //function to send ajax
+    const sendAjax = (url, acceptedType) => {
+      //create a new xhr (ajax) request. 
+      //Remember that these are ASYNCHRONOUS
+      const xhr = new XMLHttpRequest();
+      //set the xhr to a GET request to a certain URL
+      xhr.open('GET', url);
+      //Set the accept headers to the desired response mime type
+      //Server does NOT have to support this. It is a gentle request.
+      xhr.setRequestHeader ("Accept", acceptedType);
+      //When the xhr loads, call handleResponse and pass the xhr object
+      xhr.onload = () => handleResponse(xhr);
+      //send our ajax request to the server
+      xhr.send();
+    };
+    //initialization function
+    const init = () => {
+	  const sendOption = document.querySelector("#page");
+	  const typeOption = document.querySelector("#type");
+	  const sendButton = document.querySelector("#send");
+      
+      //functions to call sendAjax for us with the correct parameters
+	  const send = () => sendAjax(sendOption.options[sendOption.selectedIndex].value, typeOption.options[typeOption.selectedIndex].value);
+      
+      //attach the correct functions to the correct events
+	  sendButton.addEventListener('click', send);
+    };
+    window.onload = init;
   </script>
 </head>
 <body>
